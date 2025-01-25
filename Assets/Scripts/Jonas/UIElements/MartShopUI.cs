@@ -5,132 +5,117 @@ using UnityEngine.InputSystem;
 public class MartShopUI : MonoBehaviour
 {
     [Header("UI Elements")]
-    public GameObject shopPanel; // The UI panel for the shop
-    public Text storedObjectsText; // Text to display stored objects count
+    public GameObject shopPanel; // The UI panel for the Capymart shop
+    public Text storedObjectsText; // Display stored objects count
     public Button closeShopButton; // Button to close the shop
+    public Button purchaseYuzuCoinButton; // Button to purchase Yuzu Coin
 
-    [Header("Shop Items")]
-    public ShopItem[] shopItems; // Array of items available in the shop
+    [Header("Purchase Settings")]
+    public int yuzuCoinCost = 1; // The cost of 1 Yuzu Coin in Stored Objects
 
     private StorageSystem storageSystem; // Reference to the StorageSystem
     private PlayerInput playerInput; // Reference to the player's input
-    private PlayerMove playerMove; // Reference to the player's movement script
+    private PlayerUI playerUI; // Reference to the PlayerUI script
+    private PlayerShooting playerShoot; // Reference to the PlayerShooting script
 
     private void Start()
     {
-        // Find required components in the scene
         storageSystem = FindObjectOfType<StorageSystem>();
         playerInput = FindObjectOfType<PlayerInput>();
-        playerMove = FindObjectOfType<PlayerMove>();
+        playerUI = FindObjectOfType<PlayerUI>(); // Get the PlayerUI script
+        playerShoot = FindObjectOfType<PlayerShooting>(); // Get the PlayerShooting script
 
-        if (storageSystem == null)
+        if (storageSystem == null || playerInput == null || playerUI == null || playerShoot == null)
         {
-            Debug.LogError("StorageSystem not found in the scene!");
+            Debug.LogError("Necessary components missing!");
             return;
         }
 
-        if (playerInput == null)
+        // Link the button to the method for purchasing Yuzu Coin
+        if (purchaseYuzuCoinButton != null)
         {
-            Debug.LogError("PlayerInput not found in the scene!");
-            return;
+            purchaseYuzuCoinButton.onClick.AddListener(PurchaseYuzuCoin);
         }
 
-        if (playerMove == null)
-        {
-            Debug.LogError("PlayerMove script not found on the player!");
-            return;
-        }
-
-        // Initialize shop item buttons
-        foreach (var item in shopItems)
-        {
-            item.purchaseButton.onClick.AddListener(() => OnPurchaseItem(item));
-        }
-
-        // Set up close button
+        // Set up the close button
         if (closeShopButton != null)
         {
             closeShopButton.onClick.AddListener(CloseShop);
         }
 
-        // Hide shop initially
-        shopPanel.SetActive(false);
+        shopPanel.SetActive(false); // Hide the shop initially
     }
 
     private void Update()
     {
-        // Update the stored objects text in real-time
-        UpdateStoredObjectsText();
+        storedObjectsText.text = "Stored Objects: " + storageSystem.storedObjects.Count;
     }
 
+    // Open the Capymart shop
     public void OpenShop()
     {
-        shopPanel.SetActive(true);
+        shopPanel.SetActive(true); // Show the shop
         Time.timeScale = 0; // Pause game time
-        PausePlayer(true); // Pause player movement and input
+        playerInput.enabled = false; // Disable player input
+
+        if (playerShoot != null)
+        {
+            playerShoot.enabled = false; // Disable shooting while in the shop
+        }
+
+        if (playerUI != null)
+        {
+            playerUI.gameObject.SetActive(false); // Disable Player UI when interacting with the shop
+        }
     }
 
+    // Close the Capymart shop
     public void CloseShop()
     {
-        shopPanel.SetActive(false);
+        shopPanel.SetActive(false); // Hide the shop
         Time.timeScale = 1; // Resume game time
-        PausePlayer(false); // Resume player movement and input
-    }
+        playerInput.enabled = true; // Re-enable player input
 
-    private void PausePlayer(bool isPaused)
-    {
-        if (playerInput != null)
+        if (playerShoot != null)
         {
-            playerInput.enabled = !isPaused; // Enable/disable player input
+            playerShoot.enabled = true; // Re-enable shooting when exiting the shop
         }
 
-        if (playerMove != null)
+        if (playerUI != null)
         {
-            playerMove.SetPause(isPaused); // Pause movement logic in PlayerMove
+            playerUI.gameObject.SetActive(true); // Re-enable Player UI when exiting the shop
         }
     }
 
-    private void UpdateStoredObjectsText()
+    // Handle the Yuzu Coin purchase
+    public void PurchaseYuzuCoin()
     {
-        // Update the UI text to reflect the number of stored objects
-        if (storedObjectsText != null)
+        // Check if the player has enough stored objects to buy a Yuzu Coin
+        if (storageSystem.storedObjects.Count >= yuzuCoinCost)
         {
-            storedObjectsText.text = "Stored Objects: " + storageSystem.storedObjects.Count;
-        }
-    }
-
-    private void OnPurchaseItem(ShopItem item)
-    {
-        // Check if the player has enough stored objects to buy this item
-        if (storageSystem.storedObjects.Count >= item.cost)
-        {
-            // Deduct the cost from the player's storage
-            for (int i = 0; i < item.cost; i++)
+            // Deduct the required stored objects
+            for (int i = 0; i < yuzuCoinCost; i++)
             {
                 if (storageSystem.storedObjects.Count > 0)
                 {
-                    storageSystem.storedObjects.RemoveAt(0);
+                    storageSystem.storedObjects.RemoveAt(0); // Remove one stored object
                 }
             }
 
-            Debug.Log($"Purchased {item.itemName} for {item.cost} stored objects!");
+            // Add 1 Yuzu Coin to the player's inventory
+            storageSystem.AddYuzuCoins(1); // You can adjust this to match the cost of 1 Yuzu Coin
 
-            // Implement any additional logic for granting the item to the player
+            Debug.Log("Purchased Yuzu Coin!");
+
+            // Update the PlayerUI to reflect the new Yuzu coins count
+            if (playerUI != null)
+            {
+                playerUI.ForceUpdateYuzuCoins(); // Update the UI immediately after purchase
+            }
         }
         else
         {
-            Debug.Log($"Not enough stored objects to purchase {item.itemName} (Cost: {item.cost}).");
+            Debug.Log("Not enough stored objects to buy a Yuzu coin.");
         }
-
-        // Update the UI after a purchase
-        UpdateStoredObjectsText();
     }
-}
-
-[System.Serializable]
-public class ShopItem
-{
-    public string itemName; // Name of the item
-    public int cost; // Cost in stored objects
-    public Button purchaseButton; // The button to purchase this item
 }

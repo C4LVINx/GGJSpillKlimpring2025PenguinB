@@ -4,22 +4,52 @@ using UnityEngine;
 public class StorageSystem : MonoBehaviour
 {
     [Header("Storage Settings")]
-    public List<GameObject> storedObjects = new List<GameObject>(); // List to store the caught objects
+    public List<GameObject> storedObjects = new List<GameObject>();  // List to store objects
+    public int yuzuCoins = 0; // The YuzuCoin currency
 
+    // Method to store a caught object
     public void StoreCaughtObject(GameObject caughtObject)
     {
-        // Store the object in the inventory
         storedObjects.Add(caughtObject);
-        Debug.Log($"Stored {caughtObject.name} in inventory.");
+        Debug.Log($"{caughtObject.name} has been stored in the storage system.");
     }
 
-    public void ShowStoredObjects()
+    // Method to add YuzuCoins
+    public void AddYuzuCoins(int amount)
     {
-        // Display all stored objects for debugging
-        Debug.Log("Stored Objects: ");
-        foreach (var obj in storedObjects)
+        yuzuCoins += amount;
+        Debug.Log($"Added {amount} YuzuCoins. Current balance: {yuzuCoins}.");
+    }
+
+    // Method to spend YuzuCoins
+    public bool SpendYuzuCoins(int amount)
+    {
+        if (yuzuCoins >= amount)
         {
-            Debug.Log(obj.name);
+            yuzuCoins -= amount;
+            Debug.Log($"Spent {amount} YuzuCoins. Remaining balance: {yuzuCoins}.");
+            return true;
         }
+        else
+        {
+            Debug.Log("Not enough YuzuCoins.");
+            return false;
+        }
+    }
+
+    // Method to remove a specific object from storage
+    public void RemoveObject(GameObject objectToRemove)
+    {
+        if (storedObjects.Contains(objectToRemove))
+        {
+            storedObjects.Remove(objectToRemove);
+            Debug.Log($"{objectToRemove.name} has been removed from storage.");
+        }
+    }
+
+    // Method to get the count of stored objects
+    public int GetStoredObjectCount()
+    {
+        return storedObjects.Count;
     }
 }

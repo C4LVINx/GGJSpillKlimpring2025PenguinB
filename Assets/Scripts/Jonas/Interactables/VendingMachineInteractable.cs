@@ -1,24 +1,30 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class MartInteraction : MonoBehaviour
+public class VendingMachineInteractble : MonoBehaviour
 {
-    [Header("Mart Settings")]
-    public string martName = "Mart";  // Name of the mart
-    public float interactionRadius = 3f; // Radius to interact with mart
+    [Header("Vending Machine Settings")]
+    public string vendingMachineName = "Vending Machine";  // Name of the vending machine
+    public float interactionRadius = 3f; // Radius to interact with vending machine
     public StorageSystem storageSystem; // Reference to the storage system
     public Transform playerTransform;  // Reference to the player transform
 
     private PlayerInput playerInput;  // Player input reference
-    private PlayerShooting playerShoot; // Reference to the player's shooting script
+    private VendingMachine vendingMachine;  // Reference to the VendingMachine script
 
     private void Awake()
     {
         playerInput = GetComponent<PlayerInput>();
-        playerShoot = GetComponent<PlayerShooting>(); // Make sure you have this component on the player
-        if (playerInput == null || playerShoot == null)
+        if (playerInput == null)
         {
-            Debug.LogError("PlayerInput or PlayerShooting component not found!");
+            Debug.LogError("PlayerInput component not found!");
+        }
+
+        // Get the VendingMachine component
+        vendingMachine = GetComponent<VendingMachine>();
+        if (vendingMachine == null)
+        {
+            Debug.LogError("VendingMachine component not found!");
         }
     }
 
@@ -52,18 +58,18 @@ public class MartInteraction : MonoBehaviour
         // Debug the positions to see what they are
         if (playerTransform != null)
         {
-            Debug.Log($"Mart Position: {transform.position}");
+            Debug.Log($"Vending Machine Position: {transform.position}");
             Debug.Log($"Player Position: {playerTransform.position}");
 
             // Check if the player is within interaction range
             float distance = Vector3.Distance(transform.position, playerTransform.position);
             if (distance <= interactionRadius)
             {
-                OpenMartMenu();
+                OpenVendingMachineUI();
             }
             else
             {
-                Debug.Log("You are too far away from the mart to interact.");
+                Debug.Log("You are too far away from the vending machine to interact.");
             }
         }
         else
@@ -72,32 +78,16 @@ public class MartInteraction : MonoBehaviour
         }
     }
 
-    private void OpenMartMenu()
+    private void OpenVendingMachineUI()
     {
-        // Show the shop when the player interacts with the mart
-        MartShopUI martShopUI = FindObjectOfType<MartShopUI>();
-        if (martShopUI != null)
+        // Show the vending machine UI when the player interacts with it
+        if (vendingMachine != null)
         {
-            martShopUI.OpenShop();
-
-            // Disable player shooting while interacting with the mart
-            if (playerShoot != null)
-            {
-                playerShoot.enabled = false;
-            }
+            vendingMachine.OpenVendingUI();  // Calls the OpenVendingUI() method in the VendingMachine script
         }
         else
         {
-            Debug.LogError("MartShopUI not found!");
-        }
-    }
-
-    public void CloseMartMenu()
-    {
-        // Re-enable shooting when exiting the mart
-        if (playerShoot != null)
-        {
-            playerShoot.enabled = true;
+            Debug.LogError("VendingMachine component not found!");
         }
     }
 }
