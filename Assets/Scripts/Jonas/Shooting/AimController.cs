@@ -2,38 +2,44 @@ using UnityEngine;
 
 public class AimController : MonoBehaviour
 {
-    [SerializeField] private Transform bulletSpawnPoint; // Empty GameObject for bullet spawning
-    [SerializeField] private float radius = 2f; // Distance from the player
-    [SerializeField] private LayerMask aimLayerMask; // Layers to aim at
+    [Header("Player Reference")]
+    public Transform player; // The player's transform
 
-    private Camera _mainCamera;
+    [Header("Aim Settings")]
+    public float radius = 2f; // Distance from the player
+    public float rotationSpeed = 5f; // Speed of smooth rotation
 
-    private void Awake()
+    private Camera mainCamera; // The main camera in the scene
+
+    private void Start()
     {
-        _mainCamera = Camera.main; // Get the main camera
+        mainCamera = Camera.main; // Cache the main camera
     }
 
     private void Update()
     {
-        // Get the mouse position from the screen
-        Vector2 mousePosition = Input.mousePosition;
-
-        // Raycast from the mouse position into the game world
-        Ray ray = _mainCamera.ScreenPointToRay(mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, aimLayerMask))
+        if (player == null)
         {
-            // Calculate the direction from the player to the mouse pointer
-            Vector3 direction = hit.point - transform.position;
-            direction.y = 0; // Keep it on the same horizontal plane
+            Debug.LogWarning("Player Transform is not assigned!");
+            return;
+        }
 
-            // Normalize the direction vector and scale it by the radius
-            Vector3 clampedPosition = transform.position + direction.normalized * radius;
+        // Get the mouse position in world space
+        Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+        Plane groundPlane = new Plane(Vector3.up, Vector3.zero); // Assume a flat ground plane
+        if (groundPlane.Raycast(ray, out float enter))
+        {
+            Vector3 mouseWorldPosition = ray.GetPoint(enter);
 
-            // Move the bullet spawn point to the calculated position
-            bulletSpawnPoint.position = clampedPosition;
+            // Calculate the direction from the player to the mouse position
+            Vector3 direction = (mouseWorldPosition - player.position).normalized;
 
-            // Rotate the bullet spawn point to face the mouse pointer
-            bulletSpawnPoint.LookAt(hit.point);
+            // Position the empty GameObject in a circle around the player
+            Vector3 targetPosition = player.position + direction * radius;
+            transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * rotationSpeed);
+
+            // Make the empty GameObject face the mouse direction
+            transform.LookAt(mouseWorldPosition);
         }
     }
 }
