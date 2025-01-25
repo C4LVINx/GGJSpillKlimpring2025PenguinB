@@ -90,6 +90,10 @@ public class BulletCollision : MonoBehaviour
 
     private void TrapInBubble(GameObject target)
     {
+        // Change the tag of the object to "TrappedObject"
+        target.tag = "TrappedObject";
+        Debug.Log($"Changed {target.name}'s tag to TrappedObject");
+
         // Check if the target has a Rigidbody
         Rigidbody targetRb = target.GetComponent<Rigidbody>();
         if (targetRb != null)
@@ -119,20 +123,48 @@ public class BulletCollision : MonoBehaviour
 
     private System.Collections.IEnumerator UnfreezeAfterBubble(GameObject target, float duration)
     {
-        Debug.Log($"Starting unfreeze for {target.name} after {duration} seconds");
-
-        yield return new WaitForSeconds(duration);
-
-        // Unfreeze the object (re-enable physics)
-        Rigidbody targetRb = target.GetComponent<Rigidbody>();
-        if (targetRb != null)
+        // First, check if the target exists and is not destroyed
+        if (target == null)
         {
-            targetRb.isKinematic = false; // Re-enable physics on the trapped object
-            Debug.Log($"Unfreezing {target.name} after bubble expires.");
+            Debug.Log("Target has already been destroyed, skipping unfreeze.");
+            yield break; // Exit coroutine early if the target is destroyed
+        }
+
+        // Safe debug log with null-conditional check
+        Debug.Log($"Starting unfreeze for {target?.name} after {duration} seconds");
+
+        yield return new WaitForSeconds(duration); // Wait for the duration of the bubble
+
+        // Now, check if the target still exists before accessing its components
+        if (target != null)
+        {
+            try
+            {
+                // Unfreeze the object (re-enable physics)
+                Rigidbody targetRb = target.GetComponent<Rigidbody>();
+                if (targetRb != null)
+                {
+                    targetRb.isKinematic = false; // Re-enable physics on the trapped object
+                    Debug.Log($"Unfreezing {target.name} after bubble expires.");
+                }
+                else
+                {
+                    Debug.Log($"Rigidbody not found on {target.name} during unfreeze.");
+                }
+
+                // Change the tag back to "TrapTarget" once the bubble breaks
+                target.tag = "TrapTarget";
+                Debug.Log($"Changed {target.name}'s tag back to TrapTarget");
+            }
+            catch (System.Exception ex)
+            {
+                // Log any errors related to unfreezing the object
+                Debug.LogError($"Error while trying to unfreeze object: {ex.Message}");
+            }
         }
         else
         {
-            Debug.Log($"Rigidbody not found on {target.name} during unfreeze.");
+            Debug.Log("Target has already been destroyed, skipping unfreeze.");
         }
     }
 }
