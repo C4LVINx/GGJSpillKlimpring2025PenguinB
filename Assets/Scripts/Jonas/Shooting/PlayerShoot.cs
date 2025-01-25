@@ -1,68 +1,40 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerShoot : MonoBehaviour
+public class PlayerShooting : MonoBehaviour
 {
-    [SerializeField] private GameObject bulletPrefab; // Prefab for the bullets
-    [SerializeField] private Transform bulletSpawnPoint; // Empty GameObject for bullet spawn location
-    [SerializeField] private float bulletSpeed = 10f; // Speed of the bullets
-    [SerializeField] private LayerMask aimLayerMask; // LayerMask to detect where the mouse points
+    [Header("Bullet Settings")]
+    public GameObject bulletPrefab; // The prefab for the bullet to spawn
+    public Transform bulletSpawnPoint; // The point where bullets are instantiated
+    public float bulletSpeed = 20f; // Speed of the bullet
 
-    private PlayerMovement _inputActions;
-    private Camera _mainCamera;
+    [Header("Input")]
+    private PlayerInput playerInput;
 
     private void Awake()
     {
-        _inputActions = new PlayerMovement();
-        _mainCamera = Camera.main;
+        playerInput = GetComponent<PlayerInput>();
     }
 
     private void OnEnable()
     {
-        _inputActions.Enable();
-        _inputActions.InputPlayer.Shoot.performed += OnShootPerformed; // Hook into Shoot action
-        _inputActions.InputPlayer.Aim.performed += OnAimPerformed;   // Hook into Aim action
+        // Subscribe to the input event for shooting
+        playerInput.actions["Shoot"].performed += OnShoot;
     }
 
     private void OnDisable()
     {
-        _inputActions.InputPlayer.Shoot.performed -= OnShootPerformed;
-        _inputActions.InputPlayer.Aim.performed -= OnAimPerformed;
-        _inputActions.Disable();
+        // Unsubscribe from the input event for shooting
+        playerInput.actions["Shoot"].performed -= OnShoot;
     }
 
-    private void OnShootPerformed(InputAction.CallbackContext context)
+    public void OnShoot(InputAction.CallbackContext context)
     {
-        // Spawn and shoot the bullet
-        ShootBullet();
-    }
+        if (!context.performed) return; // Ensure the action was performed (not canceled, etc.)
 
-    private void OnAimPerformed(InputAction.CallbackContext context)
-    {
-        // Get the mouse position in screen space
-        Vector2 mousePosition = context.ReadValue<Vector2>();
+        Debug.Log("Shooting!");
 
-        // Raycast from the mouse position to the game world
-        Ray ray = _mainCamera.ScreenPointToRay(mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, aimLayerMask))
-        {
-            // Move the bulletSpawnPoint to the hit position
-            Vector3 aimDirection = hit.point - transform.position;
-            aimDirection.y = 0; // Keep it on the same plane as the player
-
-            // Rotate the spawn point to face the aim direction
-            bulletSpawnPoint.position = transform.position + aimDirection.normalized;
-            bulletSpawnPoint.rotation = Quaternion.LookRotation(aimDirection);
-        }
-    }
-
-    private void ShootBullet()
-    {
-        if (bulletPrefab == null || bulletSpawnPoint == null) return;
-
-        // Spawn the bullet at the spawn point
+        // Spawn the bullet
         GameObject bullet = Instantiate(bulletPrefab, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
 
         // Add velocity to the bullet
@@ -72,7 +44,7 @@ public class PlayerShoot : MonoBehaviour
             bulletRb.velocity = bulletSpawnPoint.forward * bulletSpeed;
         }
 
-        // Optionally, destroy the bullet after a certain time
+        // Optional: Destroy the bullet after a certain time to avoid clutter
         Destroy(bullet, 5f);
     }
 }

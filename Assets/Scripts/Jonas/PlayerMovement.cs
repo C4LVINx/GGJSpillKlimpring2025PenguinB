@@ -44,15 +44,6 @@ public partial class @PlayerMovement: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
-                },
-                {
-                    ""name"": ""Aim"",
-                    ""type"": ""Value"",
-                    ""id"": ""85570729-6676-4441-bb77-4f5bb7a605b4"",
-                    ""expectedControlType"": ""Axis"",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -114,22 +105,11 @@ public partial class @PlayerMovement: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""1bf89ae6-a4e2-45c5-8673-57a3ac1094ba"",
-                    ""path"": ""<Mouse>/leftButton"",
+                    ""path"": ""<Keyboard>/e"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Shoot"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""7826c675-f540-409e-9740-7656e7eb1460"",
-                    ""path"": """",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Aim"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -142,7 +122,6 @@ public partial class @PlayerMovement: IInputActionCollection2, IDisposable
         m_InputPlayer = asset.FindActionMap("InputPlayer", throwIfNotFound: true);
         m_InputPlayer_Move = m_InputPlayer.FindAction("Move", throwIfNotFound: true);
         m_InputPlayer_Shoot = m_InputPlayer.FindAction("Shoot", throwIfNotFound: true);
-        m_InputPlayer_Aim = m_InputPlayer.FindAction("Aim", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -206,14 +185,12 @@ public partial class @PlayerMovement: IInputActionCollection2, IDisposable
     private List<IInputPlayerActions> m_InputPlayerActionsCallbackInterfaces = new List<IInputPlayerActions>();
     private readonly InputAction m_InputPlayer_Move;
     private readonly InputAction m_InputPlayer_Shoot;
-    private readonly InputAction m_InputPlayer_Aim;
     public struct InputPlayerActions
     {
         private @PlayerMovement m_Wrapper;
         public InputPlayerActions(@PlayerMovement wrapper) { m_Wrapper = wrapper; }
         public InputAction @Move => m_Wrapper.m_InputPlayer_Move;
         public InputAction @Shoot => m_Wrapper.m_InputPlayer_Shoot;
-        public InputAction @Aim => m_Wrapper.m_InputPlayer_Aim;
         public InputActionMap Get() { return m_Wrapper.m_InputPlayer; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -229,9 +206,6 @@ public partial class @PlayerMovement: IInputActionCollection2, IDisposable
             @Shoot.started += instance.OnShoot;
             @Shoot.performed += instance.OnShoot;
             @Shoot.canceled += instance.OnShoot;
-            @Aim.started += instance.OnAim;
-            @Aim.performed += instance.OnAim;
-            @Aim.canceled += instance.OnAim;
         }
 
         private void UnregisterCallbacks(IInputPlayerActions instance)
@@ -242,9 +216,6 @@ public partial class @PlayerMovement: IInputActionCollection2, IDisposable
             @Shoot.started -= instance.OnShoot;
             @Shoot.performed -= instance.OnShoot;
             @Shoot.canceled -= instance.OnShoot;
-            @Aim.started -= instance.OnAim;
-            @Aim.performed -= instance.OnAim;
-            @Aim.canceled -= instance.OnAim;
         }
 
         public void RemoveCallbacks(IInputPlayerActions instance)
@@ -266,6 +237,5 @@ public partial class @PlayerMovement: IInputActionCollection2, IDisposable
     {
         void OnMove(InputAction.CallbackContext context);
         void OnShoot(InputAction.CallbackContext context);
-        void OnAim(InputAction.CallbackContext context);
     }
 }
