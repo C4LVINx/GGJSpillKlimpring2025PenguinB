@@ -12,6 +12,8 @@ public class PlayerMove : MonoBehaviour
 
     private Vector3 _moveDirection;
 
+    private bool isPaused = false; // Flag to control movement pause
+
     private void Awake()
     {
         _controller = GetComponent<CharacterController>();
@@ -34,27 +36,36 @@ public class PlayerMove : MonoBehaviour
 
     private void OnMovePerformed(InputAction.CallbackContext context)
     {
+        if (isPaused) return; // Prevent movement while paused
+
         Vector2 input = context.ReadValue<Vector2>();
         _moveDirection = new Vector3(input.x, 0, input.y).normalized; // Convert to 3D direction
     }
 
     private void OnMoveCanceled(InputAction.CallbackContext context)
     {
+        if (isPaused) return; // Prevent changes while paused
+
         _moveDirection = Vector3.zero; // Stop movement when input is canceled
     }
 
     private void FixedUpdate()
     {
-        if (_moveDirection != Vector3.zero)
-        {
-            // Move the character
-            Vector3 movement = _moveDirection * _moveSpeed * Time.deltaTime;
-            _controller.Move(movement);
+        if (isPaused || _moveDirection == Vector3.zero) return; // Prevent movement while paused or idle
 
-            // Rotate the character to face the movement direction
-            Quaternion targetRotation = Quaternion.LookRotation(_moveDirection, Vector3.up);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _rotSpeed * Time.deltaTime);
-        }
+        // Move the character
+        Vector3 movement = _moveDirection * _moveSpeed * Time.deltaTime;
+        _controller.Move(movement);
+
+        // Rotate the character to face the movement direction
+        Quaternion targetRotation = Quaternion.LookRotation(_moveDirection, Vector3.up);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _rotSpeed * Time.deltaTime);
+    }
+
+    // Public method to toggle pause state
+    public void SetPause(bool pause)
+    {
+        isPaused = pause;
+        if (pause) _moveDirection = Vector3.zero; // Stop movement immediately when paused
     }
 }
-

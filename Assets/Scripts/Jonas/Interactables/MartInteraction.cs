@@ -72,19 +72,15 @@ public class MartInteraction : MonoBehaviour
 
     private void OpenMartMenu()
     {
-        Debug.Log($"Interacting with {martName}. Here are your options!");
-
-        // Simulate interaction with the mart (you could show a UI here)
-        // For now, we'll use the console for debugging
-        if (storageSystem.storedObjects.Count > 0)
+        // Show the shop when the player interacts with the mart
+        MartShopUI martShopUI = FindObjectOfType<MartShopUI>();
+        if (martShopUI != null)
         {
-            Debug.Log("Available for purchase:");
-            // You can implement more specific mart items here
-            Debug.Log("Item 1 - Buy using stored object.");
+            martShopUI.OpenShop();
         }
         else
         {
-            Debug.Log("You don't have any stored objects to buy items.");
+            Debug.LogError("MartShopUI not found!");
         }
     }
 }
