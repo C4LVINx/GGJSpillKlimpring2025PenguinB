@@ -9,22 +9,25 @@ public class PlayerMove : MonoBehaviour
 
     [SerializeField] private float _moveSpeed = 5f;
     [SerializeField] private float _rotSpeed = 720f;
+    [SerializeField] private float _gravity = 9.81f;
+    [SerializeField] private float _groundedGravity = -0.1f;
 
     private Vector3 _moveDirection;
+    private Vector3 _velocity;
 
-    private bool isPaused = false; // Flag to control movement pause
+    private bool isPaused = false;
 
     private void Awake()
     {
         _controller = GetComponent<CharacterController>();
-        _inputActions = new PlayerMovement(); // Initialize the input actions
+        _inputActions = new PlayerMovement();
     }
 
     private void OnEnable()
     {
         _inputActions.Enable();
-        _inputActions.InputPlayer.Move.performed += OnMovePerformed; // Use InputPlayer action map
-        _inputActions.InputPlayer.Move.canceled += OnMoveCanceled;  // Handle canceled input
+        _inputActions.InputPlayer.Move.performed += OnMovePerformed;
+        _inputActions.InputPlayer.Move.canceled += OnMoveCanceled;
     }
 
     private void OnDisable()
@@ -34,38 +37,53 @@ public class PlayerMove : MonoBehaviour
         _inputActions.Disable();
     }
 
-    private void OnMovePerformed(InputAction.CallbackContext context)
+    private void OnMovePerformed(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
-        if (isPaused) return; // Prevent movement while paused
+        if (isPaused) return;
 
         Vector2 input = context.ReadValue<Vector2>();
-        _moveDirection = new Vector3(input.x, 0, input.y).normalized; // Convert to 3D direction
+        _moveDirection = new Vector3(input.x, 0, input.y).normalized;
     }
 
-    private void OnMoveCanceled(InputAction.CallbackContext context)
+    private void OnMoveCanceled(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
-        if (isPaused) return; // Prevent changes while paused
+        if (isPaused) return;
 
-        _moveDirection = Vector3.zero; // Stop movement when input is canceled
+        _moveDirection = Vector3.zero;
     }
 
     private void FixedUpdate()
     {
-        if (isPaused || _moveDirection == Vector3.zero) return; // Prevent movement while paused or idle
+        if (isPaused) return;
+
+        if (_controller.isGrounded)
+        {
+            // Reset vertical velocity when grounded
+            _velocity.y = _groundedGravity;
+        }
+        else
+        {
+            // Apply gravity when not grounded
+            _velocity.y -= _gravity * Time.deltaTime;
+        }
+
+        // Calculate movement
+        Vector3 movement = (_moveDirection * _moveSpeed + _velocity) * Time.deltaTime;
 
         // Move the character
-        Vector3 movement = _moveDirection * _moveSpeed * Time.deltaTime;
         _controller.Move(movement);
 
-        // Rotate the character to face the movement direction
-        Quaternion targetRotation = Quaternion.LookRotation(_moveDirection, Vector3.up);
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _rotSpeed * Time.deltaTime);
+        // Rotate the character to face movement direction
+        if (_moveDirection != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(_moveDirection, Vector3.up);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _rotSpeed * Time.deltaTime);
+        }
     }
 
-    // Public method to toggle pause state
     public void SetPause(bool pause)
     {
         isPaused = pause;
-        if (pause) _moveDirection = Vector3.zero; // Stop movement immediately when paused
+        if (pause) _moveDirection = Vector3.zero;
     }
 }
