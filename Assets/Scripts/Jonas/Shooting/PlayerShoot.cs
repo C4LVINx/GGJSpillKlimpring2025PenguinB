@@ -114,6 +114,13 @@ public class BulletCollision : MonoBehaviour
         // Optionally, apply some scale or effect to the bubble to make it look more fun
         bubble.transform.localScale = new Vector3(2f, 2f, 2f); // Adjust as needed
 
+        // Call the insect's TrapInBubble method to stop its movement
+        InsectMovement insectMovement = target.GetComponent<InsectMovement>();
+        if (insectMovement != null)
+        {
+            insectMovement.TrapInBubble();
+        }
+
         // Destroy the bubble after the duration
         Destroy(bubble, bubbleDuration);
 
@@ -123,43 +130,28 @@ public class BulletCollision : MonoBehaviour
 
     private System.Collections.IEnumerator UnfreezeAfterBubble(GameObject target, float duration)
     {
-        // First, check if the target exists and is not destroyed
-        if (target == null)
-        {
-            Debug.Log("Target has already been destroyed, skipping unfreeze.");
-            yield break; // Exit coroutine early if the target is destroyed
-        }
+        // Wait for the duration of the bubble
+        yield return new WaitForSeconds(duration);
 
-        // Safe debug log with null-conditional check
-        Debug.Log($"Starting unfreeze for {target?.name} after {duration} seconds");
-
-        yield return new WaitForSeconds(duration); // Wait for the duration of the bubble
-
-        // Now, check if the target still exists before accessing its components
+        // Unfreeze the object and restore its movement
         if (target != null)
         {
-            try
+            Rigidbody targetRb = target.GetComponent<Rigidbody>();
+            if (targetRb != null)
             {
-                // Unfreeze the object (re-enable physics)
-                Rigidbody targetRb = target.GetComponent<Rigidbody>();
-                if (targetRb != null)
-                {
-                    targetRb.isKinematic = false; // Re-enable physics on the trapped object
-                    Debug.Log($"Unfreezing {target.name} after bubble expires.");
-                }
-                else
-                {
-                    Debug.Log($"Rigidbody not found on {target.name} during unfreeze.");
-                }
-
-                // Change the tag back to "TrapTarget" once the bubble breaks
-                target.tag = "TrapTarget";
-                Debug.Log($"Changed {target.name}'s tag back to TrapTarget");
+                targetRb.isKinematic = false; // Re-enable physics on the trapped object
+                Debug.Log($"Unfreezing {target.name} after bubble expires.");
             }
-            catch (System.Exception ex)
+
+            // Change the tag back to "TrapTarget" once the bubble breaks
+            target.tag = "TrapTarget";
+            Debug.Log($"Changed {target.name}'s tag back to TrapTarget");
+
+            // Call the insect's UntrapFromBubble method to resume its movement
+            InsectMovement insectMovement = target.GetComponent<InsectMovement>();
+            if (insectMovement != null)
             {
-                // Log any errors related to unfreezing the object
-                Debug.LogError($"Error while trying to unfreeze object: {ex.Message}");
+                insectMovement.UntrapFromBubble();
             }
         }
         else
