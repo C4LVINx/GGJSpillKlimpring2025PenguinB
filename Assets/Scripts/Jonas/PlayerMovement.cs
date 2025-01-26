@@ -44,6 +44,33 @@ public partial class @PlayerMovement: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Catch"",
+                    ""type"": ""Button"",
+                    ""id"": ""5e6bdcf2-48a8-400d-a020-3cce20d83764"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Interact"",
+                    ""type"": ""Button"",
+                    ""id"": ""975d72b9-d762-4a18-9d0e-26d1430f6b74"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Inventory"",
+                    ""type"": ""Button"",
+                    ""id"": ""355b6453-526c-4d23-a838-16c736f46a21"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -105,11 +132,44 @@ public partial class @PlayerMovement: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""1bf89ae6-a4e2-45c5-8673-57a3ac1094ba"",
-                    ""path"": ""<Keyboard>/e"",
+                    ""path"": ""<Mouse>/leftButton"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Shoot"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""081f50ca-db86-4c85-9faa-ba24f2b7e386"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Catch"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""268618f4-e01b-47bb-b21b-d4d702c9d2fb"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Interact"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2a8a51c4-b506-49d3-80df-58d94fc37b36"",
+                    ""path"": ""<Keyboard>/i"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Inventory"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -122,6 +182,9 @@ public partial class @PlayerMovement: IInputActionCollection2, IDisposable
         m_InputPlayer = asset.FindActionMap("InputPlayer", throwIfNotFound: true);
         m_InputPlayer_Move = m_InputPlayer.FindAction("Move", throwIfNotFound: true);
         m_InputPlayer_Shoot = m_InputPlayer.FindAction("Shoot", throwIfNotFound: true);
+        m_InputPlayer_Catch = m_InputPlayer.FindAction("Catch", throwIfNotFound: true);
+        m_InputPlayer_Interact = m_InputPlayer.FindAction("Interact", throwIfNotFound: true);
+        m_InputPlayer_Inventory = m_InputPlayer.FindAction("Inventory", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -185,12 +248,18 @@ public partial class @PlayerMovement: IInputActionCollection2, IDisposable
     private List<IInputPlayerActions> m_InputPlayerActionsCallbackInterfaces = new List<IInputPlayerActions>();
     private readonly InputAction m_InputPlayer_Move;
     private readonly InputAction m_InputPlayer_Shoot;
+    private readonly InputAction m_InputPlayer_Catch;
+    private readonly InputAction m_InputPlayer_Interact;
+    private readonly InputAction m_InputPlayer_Inventory;
     public struct InputPlayerActions
     {
         private @PlayerMovement m_Wrapper;
         public InputPlayerActions(@PlayerMovement wrapper) { m_Wrapper = wrapper; }
         public InputAction @Move => m_Wrapper.m_InputPlayer_Move;
         public InputAction @Shoot => m_Wrapper.m_InputPlayer_Shoot;
+        public InputAction @Catch => m_Wrapper.m_InputPlayer_Catch;
+        public InputAction @Interact => m_Wrapper.m_InputPlayer_Interact;
+        public InputAction @Inventory => m_Wrapper.m_InputPlayer_Inventory;
         public InputActionMap Get() { return m_Wrapper.m_InputPlayer; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -206,6 +275,15 @@ public partial class @PlayerMovement: IInputActionCollection2, IDisposable
             @Shoot.started += instance.OnShoot;
             @Shoot.performed += instance.OnShoot;
             @Shoot.canceled += instance.OnShoot;
+            @Catch.started += instance.OnCatch;
+            @Catch.performed += instance.OnCatch;
+            @Catch.canceled += instance.OnCatch;
+            @Interact.started += instance.OnInteract;
+            @Interact.performed += instance.OnInteract;
+            @Interact.canceled += instance.OnInteract;
+            @Inventory.started += instance.OnInventory;
+            @Inventory.performed += instance.OnInventory;
+            @Inventory.canceled += instance.OnInventory;
         }
 
         private void UnregisterCallbacks(IInputPlayerActions instance)
@@ -216,6 +294,15 @@ public partial class @PlayerMovement: IInputActionCollection2, IDisposable
             @Shoot.started -= instance.OnShoot;
             @Shoot.performed -= instance.OnShoot;
             @Shoot.canceled -= instance.OnShoot;
+            @Catch.started -= instance.OnCatch;
+            @Catch.performed -= instance.OnCatch;
+            @Catch.canceled -= instance.OnCatch;
+            @Interact.started -= instance.OnInteract;
+            @Interact.performed -= instance.OnInteract;
+            @Interact.canceled -= instance.OnInteract;
+            @Inventory.started -= instance.OnInventory;
+            @Inventory.performed -= instance.OnInventory;
+            @Inventory.canceled -= instance.OnInventory;
         }
 
         public void RemoveCallbacks(IInputPlayerActions instance)
@@ -237,5 +324,8 @@ public partial class @PlayerMovement: IInputActionCollection2, IDisposable
     {
         void OnMove(InputAction.CallbackContext context);
         void OnShoot(InputAction.CallbackContext context);
+        void OnCatch(InputAction.CallbackContext context);
+        void OnInteract(InputAction.CallbackContext context);
+        void OnInventory(InputAction.CallbackContext context);
     }
 }
