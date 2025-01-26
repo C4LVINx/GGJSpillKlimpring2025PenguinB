@@ -17,6 +17,10 @@ public class PlayerMove : MonoBehaviour
 
     private bool isPaused = false;
 
+    [Header("State GameObjects")]
+    [SerializeField] private GameObject idleStateObject; // GameObject to show when idle
+    [SerializeField] private GameObject walkingStateObject; // GameObject to show when walking
+
     private void Awake()
     {
         _controller = GetComponent<CharacterController>();
@@ -43,6 +47,8 @@ public class PlayerMove : MonoBehaviour
 
         Vector2 input = context.ReadValue<Vector2>();
         _moveDirection = new Vector3(input.x, 0, input.y).normalized;
+
+        UpdateState(); // Update game object states
     }
 
     private void OnMoveCanceled(UnityEngine.InputSystem.InputAction.CallbackContext context)
@@ -50,6 +56,8 @@ public class PlayerMove : MonoBehaviour
         if (isPaused) return;
 
         _moveDirection = Vector3.zero;
+
+        UpdateState(); // Update game object states
     }
 
     private void FixedUpdate()
@@ -85,5 +93,17 @@ public class PlayerMove : MonoBehaviour
     {
         isPaused = pause;
         if (pause) _moveDirection = Vector3.zero;
+
+        UpdateState(); // Ensure correct state during pause
+    }
+
+    private void UpdateState()
+    {
+        // Check if the player is moving
+        bool isMoving = _moveDirection != Vector3.zero;
+
+        // Toggle game objects
+        if (idleStateObject != null) idleStateObject.SetActive(!isMoving);
+        if (walkingStateObject != null) walkingStateObject.SetActive(isMoving);
     }
 }

@@ -48,7 +48,7 @@ public class MartShopUI : MonoBehaviour
 
     private void Update()
     {
-        storedObjectsText.text = "Stored Objects: " + storageSystem.storedObjects.Count;
+        storedObjectsText.text = "Insects: " + storageSystem.storedObjects.Count;
     }
 
     // Open the Capymart shop
