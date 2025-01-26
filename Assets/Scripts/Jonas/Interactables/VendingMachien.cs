@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class VendingMachine : MonoBehaviour
 {
@@ -154,11 +155,31 @@ public class VendingMachine : MonoBehaviour
             // Add logic to give the item to the player (e.g., Boba drink)
             // For example, instantiate the item or play an animation.
 
+            // Transition to the next scene after purchase
+            LoadNextScene();
+
             CloseVendingUI(); // Close the vending machine UI after purchase
         }
         else
         {
             Debug.Log("Not enough Yuzu Coins!");
+        }
+    }
+
+    // Load the next scene
+    private void LoadNextScene()
+    {
+        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex; // Get the current scene index
+        int nextSceneIndex = currentSceneIndex + 1; // Calculate the next scene index
+
+        // Check if the next scene index is valid
+        if (nextSceneIndex < SceneManager.sceneCountInBuildSettings)
+        {
+            SceneManager.LoadScene(nextSceneIndex); // Load the next scene
+        }
+        else
+        {
+            Debug.LogWarning("No more scenes to load! This is the last scene.");
         }
     }
 }

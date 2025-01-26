@@ -20474,6 +20474,11 @@ PrefabInstance:
       objectReference: {fileID: 1336446720}
     - target: {fileID: 5093052891457440989, guid: e56519a8195ac8c4a95a89cc5d42b96e,
         type: 3}
+      propertyPath: price
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 5093052891457440989, guid: e56519a8195ac8c4a95a89cc5d42b96e,
+        type: 3}
       propertyPath: buyButton
       value: 
       objectReference: {fileID: 1220790348}
