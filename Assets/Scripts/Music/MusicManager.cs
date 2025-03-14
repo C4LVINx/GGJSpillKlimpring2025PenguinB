@@ -2,36 +2,49 @@ using UnityEngine;
 
 public class MusicManager : MonoBehaviour
 {
-    public static MusicManager Instance; // Singleton instance
-    public AudioSource audioSource; // AudioSource to play music
-    public AudioClip defaultMusic; // Background music for the game
-    public AudioClip shopMusic; // Music for the shop
+    [Header("Music Tracks")]
+    public AudioClip defaultMusic; // Default background music
+    public AudioClip shopMusic;    // Music when the shop is open
+    public AudioClip vendingMusic; // Music when the vending machine is open
+
+    private AudioSource audioSource; // The audio source to play music
+    private AudioClip currentMusic;  // To track which music is currently playing
 
     private void Awake()
     {
-        // Singleton pattern to ensure only one instance of MusicManager exists
-        if (Instance == null)
+        audioSource = GetComponent<AudioSource>(); // Get the AudioSource component attached to this GameObject
+        if (audioSource == null)
         {
-            Instance = this;
-            DontDestroyOnLoad(gameObject); // Keep the MusicManager between scenes
-        }
-        else
-        {
-            Destroy(gameObject); // Destroy duplicate instances
+            Debug.LogError("No AudioSource component found on this GameObject!");
         }
     }
 
     private void Start()
     {
-        PlayMusic(defaultMusic); // Start with the default background music
+        if (audioSource != null && defaultMusic != null)
+        {
+            PlayMusic(defaultMusic); // Start with default music
+        }
     }
 
-    // Function to play the given music clip
+    // Function to play a specific music track
     public void PlayMusic(AudioClip clip)
     {
-        if (audioSource.clip == clip) return; // Avoid restarting the same music clip
-        audioSource.clip = clip; // Set the new music clip
-        audioSource.Play(); // Play the music clip
-        Debug.Log("Playing: " + clip.name); // Debug log to verify the current music
+        if (audioSource != null && currentMusic != clip) // Check if the music is already playing
+        {
+            currentMusic = clip; // Update the current music
+            audioSource.Stop(); // Stop the current music
+            audioSource.clip = clip; // Set the new music clip
+            audioSource.Play(); // Play the new music
+        }
+    }
+
+    // Optionally you can also have functions to stop or fade the music, but this is the basic setup
+    public void StopMusic()
+    {
+        if (audioSource != null)
+        {
+            audioSource.Stop();
+        }
     }
 }

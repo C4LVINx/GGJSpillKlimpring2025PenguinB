@@ -17,6 +17,9 @@ public class MartShopUI : MonoBehaviour
     private PlayerInput playerInput; // Reference to the player's input
     private PlayerUI playerUI; // Reference to the PlayerUI script
     private PlayerShooting playerShoot; // Reference to the PlayerShooting script
+    private MusicManager musicManager; // Reference to the MusicManager script
+
+    private bool isShopOpen = false; // Track if the shop is currently open
 
     private void Start()
     {
@@ -24,8 +27,9 @@ public class MartShopUI : MonoBehaviour
         playerInput = FindObjectOfType<PlayerInput>();
         playerUI = FindObjectOfType<PlayerUI>(); // Get the PlayerUI script
         playerShoot = FindObjectOfType<PlayerShooting>(); // Get the PlayerShooting script
+        musicManager = FindObjectOfType<MusicManager>(); // Get the MusicManager script
 
-        if (storageSystem == null || playerInput == null || playerUI == null || playerShoot == null)
+        if (storageSystem == null || playerInput == null || playerUI == null || playerShoot == null || musicManager == null)
         {
             Debug.LogError("Necessary components missing!");
             return;
@@ -54,36 +58,58 @@ public class MartShopUI : MonoBehaviour
     // Open the Capymart shop
     public void OpenShop()
     {
-        shopPanel.SetActive(true); // Show the shop
-        Time.timeScale = 0; // Pause game time
-        playerInput.enabled = false; // Disable player input
-
-        if (playerShoot != null)
+        if (!isShopOpen) // Only open the shop if it's not already open
         {
-            playerShoot.enabled = false; // Disable shooting while in the shop
-        }
+            shopPanel.SetActive(true); // Show the shop
+            Time.timeScale = 0; // Pause game time
+            playerInput.enabled = false; // Disable player input
 
-        if (playerUI != null)
-        {
-            playerUI.gameObject.SetActive(false); // Disable Player UI when interacting with the shop
+            if (playerShoot != null)
+            {
+                playerShoot.enabled = false; // Disable shooting while in the shop
+            }
+
+            if (playerUI != null)
+            {
+                playerUI.gameObject.SetActive(false); // Disable Player UI when interacting with the shop
+            }
+
+            // Switch to shop music
+            if (musicManager != null)
+            {
+                musicManager.PlayMusic(musicManager.shopMusic);
+            }
+
+            isShopOpen = true; // Mark shop as open
         }
     }
 
     // Close the Capymart shop
     public void CloseShop()
     {
-        shopPanel.SetActive(false); // Hide the shop
-        Time.timeScale = 1; // Resume game time
-        playerInput.enabled = true; // Re-enable player input
-
-        if (playerShoot != null)
+        if (isShopOpen) // Only close the shop if it's open
         {
-            playerShoot.enabled = true; // Re-enable shooting when exiting the shop
-        }
+            shopPanel.SetActive(false); // Hide the shop
+            Time.timeScale = 1; // Resume game time
+            playerInput.enabled = true; // Re-enable player input
 
-        if (playerUI != null)
-        {
-            playerUI.gameObject.SetActive(true); // Re-enable Player UI when exiting the shop
+            if (playerShoot != null)
+            {
+                playerShoot.enabled = true; // Re-enable shooting when exiting the shop
+            }
+
+            if (playerUI != null)
+            {
+                playerUI.gameObject.SetActive(true); // Re-enable Player UI when exiting the shop
+            }
+
+            // Switch to default music
+            if (musicManager != null)
+            {
+                musicManager.PlayMusic(musicManager.defaultMusic);
+            }
+
+            isShopOpen = false; // Mark shop as closed
         }
     }
 

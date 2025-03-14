@@ -17,7 +17,9 @@ public class VendingMachine : MonoBehaviour
     private PlayerMove playerMove; // Reference to the player movement script
     private StorageSystem storageSystem; // Reference to the storage system
     private GameObject playerUI; // Reference to the player's UI (HUD, etc.)
+    private MusicManager musicManager; // Reference to the MusicManager for music control
     private bool isInteracting = false; // To check if the player is interacting with the vending machine
+    private bool isVendingOpen = false; // Track if the vending machine UI is open
 
     private void Awake()
     {
@@ -25,6 +27,7 @@ public class VendingMachine : MonoBehaviour
         playerShoot = FindObjectOfType<PlayerShooting>(); // Find the player shooting script
         playerMove = FindObjectOfType<PlayerMove>(); // Find the player movement script
         playerUI = GameObject.Find("PlayerUI"); // Find the player's UI (assuming it's named "PlayerUI")
+        musicManager = FindObjectOfType<MusicManager>(); // Find the MusicManager in the scene
 
         // Hide the vending UI initially
         if (vendingUI != null)
@@ -84,60 +87,82 @@ public class VendingMachine : MonoBehaviour
     }
 
     // Open the vending machine UI
-    public void OpenVendingUI() // Changed to public
+    public void OpenVendingUI()
     {
-        if (vendingUI != null)
+        if (!isVendingOpen) // Only open if it's not already open
         {
-            vendingUI.SetActive(true);
-        }
+            if (vendingUI != null)
+            {
+                vendingUI.SetActive(true);
+            }
 
-        // Update the Yuzu Coins text in the vending machine UI
-        if (yuzuCoinsText != null && storageSystem != null)
-        {
-            yuzuCoinsText.text = "Current Yuzu Coins: " + storageSystem.yuzuCoins;
-        }
+            // Update the Yuzu Coins text in the vending machine UI
+            if (yuzuCoinsText != null && storageSystem != null)
+            {
+                yuzuCoinsText.text = "Current Yuzu Coins: " + storageSystem.yuzuCoins;
+            }
 
-        // Disable player shooting and movement while interacting with the vending machine
-        if (playerShoot != null)
-        {
-            playerShoot.enabled = false;
-        }
+            // Disable player shooting and movement while interacting with the vending machine
+            if (playerShoot != null)
+            {
+                playerShoot.enabled = false;
+            }
 
-        if (playerMove != null)
-        {
-            playerMove.SetPause(true); // Pause movement while interacting with the vending machine
-        }
+            if (playerMove != null)
+            {
+                playerMove.SetPause(true); // Pause movement while interacting with the vending machine
+            }
 
-        // Disable player UI (e.g., HUD) while interacting with vending machine
-        if (playerUI != null)
-        {
-            playerUI.SetActive(false); // Disable the player's UI
+            // Disable player UI (e.g., HUD) while interacting with vending machine
+            if (playerUI != null)
+            {
+                playerUI.SetActive(false); // Disable the player's UI
+            }
+
+            // Switch to vending music
+            if (musicManager != null)
+            {
+                musicManager.PlayMusic(musicManager.vendingMusic); // Play vending music
+            }
+
+            isVendingOpen = true; // Mark the vending UI as open
         }
     }
 
     // Close the vending machine UI
-    public void CloseVendingUI() // Changed to public
+    public void CloseVendingUI()
     {
-        if (vendingUI != null)
+        if (isVendingOpen) // Only close if it's open
         {
-            vendingUI.SetActive(false);
-        }
+            if (vendingUI != null)
+            {
+                vendingUI.SetActive(false);
+            }
 
-        // Enable player shooting and movement when UI is closed
-        if (playerShoot != null)
-        {
-            playerShoot.enabled = true;
-        }
+            // Enable player shooting and movement when UI is closed
+            if (playerShoot != null)
+            {
+                playerShoot.enabled = true;
+            }
 
-        if (playerMove != null)
-        {
-            playerMove.SetPause(false); // Unpause movement when closing the UI
-        }
+            if (playerMove != null)
+            {
+                playerMove.SetPause(false); // Unpause movement when closing the UI
+            }
 
-        // Enable player UI (e.g., HUD) when UI is closed
-        if (playerUI != null)
-        {
-            playerUI.SetActive(true); // Enable the player's UI
+            // Enable player UI (e.g., HUD) when UI is closed
+            if (playerUI != null)
+            {
+                playerUI.SetActive(true); // Enable the player's UI
+            }
+
+            // Switch back to default music
+            if (musicManager != null)
+            {
+                musicManager.PlayMusic(musicManager.defaultMusic); // Play default music
+            }
+
+            isVendingOpen = false; // Mark the vending UI as closed
         }
     }
 
@@ -155,31 +180,12 @@ public class VendingMachine : MonoBehaviour
             // Add logic to give the item to the player (e.g., Boba drink)
             // For example, instantiate the item or play an animation.
 
-            // Transition to the next scene after purchase
-            LoadNextScene();
-
-            CloseVendingUI(); // Close the vending machine UI after purchase
+            // Close the vending UI after purchase
+            CloseVendingUI();
         }
         else
         {
             Debug.Log("Not enough Yuzu Coins!");
-        }
-    }
-
-    // Load the next scene
-    private void LoadNextScene()
-    {
-        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex; // Get the current scene index
-        int nextSceneIndex = currentSceneIndex + 1; // Calculate the next scene index
-
-        // Check if the next scene index is valid
-        if (nextSceneIndex < SceneManager.sceneCountInBuildSettings)
-        {
-            SceneManager.LoadScene(nextSceneIndex); // Load the next scene
-        }
-        else
-        {
-            Debug.LogWarning("No more scenes to load! This is the last scene.");
         }
     }
 }
