@@ -13,14 +13,26 @@ public class PlayerShooting : MonoBehaviour
     public GameObject bubblePrefab; // The prefab for the bubble effect
     public float bubbleDuration = 5f; // How long the bubble lasts
 
-    [Header("Input")]
+    [Header("Sound Effects")]
+    public AudioClip shootSFX;  // Sound effect for shooting
+    public AudioClip bubbleTrapSFX; // Sound effect for trapping in bubble
+
+    private AudioSource audioSource;  // Declare AudioSource variable
+
     private PlayerInput playerInput;
-    private AudioSource audioSource;
 
     private void Awake()
     {
         playerInput = GetComponent<PlayerInput>();
-        audioSource = GetComponent<AudioSource>(); // Get the AudioSource component
+
+        // Ensure the AudioSource component is attached to the same GameObject
+        audioSource = GetComponent<AudioSource>();
+
+        // Check if the AudioSource component is missing, and log an error if so
+        if (audioSource == null)
+        {
+            Debug.LogError("No AudioSource component found on " + gameObject.name);
+        }
     }
 
     private void OnEnable()
@@ -39,10 +51,14 @@ public class PlayerShooting : MonoBehaviour
     {
         if (!context.performed) return; // Ensure the action was performed (not canceled, etc.)
 
-        // Play shooting sound
-        if (audioSource != null && audioSource.isActiveAndEnabled)
+        // Check if audioSource is initialized, and play shooting sound effect
+        if (audioSource != null && shootSFX != null)
         {
-            audioSource.Play();
+            audioSource.PlayOneShot(shootSFX);  // Play the shooting sound
+        }
+        else
+        {
+            Debug.LogError("audioSource or shootSFX is not assigned correctly.");
         }
 
         // Spawn the bullet
@@ -62,6 +78,8 @@ public class PlayerShooting : MonoBehaviour
         BulletCollision bulletCollision = bullet.AddComponent<BulletCollision>();
         bulletCollision.bubblePrefab = bubblePrefab;
         bulletCollision.bubbleDuration = bubbleDuration;
+        bulletCollision.bubbleTrapSFX = bubbleTrapSFX;  // Pass the bubble trapping sound effect
+        bulletCollision.SetAudioSource(audioSource);  // Pass the audioSource for sound effects
     }
 }
 
@@ -70,6 +88,15 @@ public class BulletCollision : MonoBehaviour
     [Header("Bubble Settings")]
     public GameObject bubblePrefab; // The prefab for the bubble effect
     public float bubbleDuration = 5f; // How long the bubble lasts
+
+    [Header("Sound Effects")]
+    public AudioClip bubbleTrapSFX; // Sound effect for trapping in bubble
+    private AudioSource audioSource; // This will be assigned from PlayerShooting
+
+    public void SetAudioSource(AudioSource source)
+    {
+        audioSource = source; // Set the AudioSource from PlayerShooting
+    }
 
     private void OnCollisionEnter(Collision collision)
     {
@@ -113,6 +140,12 @@ public class BulletCollision : MonoBehaviour
 
         // Optionally, apply some scale or effect to the bubble to make it look more fun
         bubble.transform.localScale = new Vector3(2f, 2f, 2f); // Adjust as needed
+
+        // Play bubble trapping sound effect
+        if (bubbleTrapSFX != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(bubbleTrapSFX); // Play bubble sound effect
+        }
 
         // Call the insect's TrapInBubble method to stop its movement
         InsectMovement insectMovement = target.GetComponent<InsectMovement>();

@@ -9,10 +9,21 @@ public class Catcher : MonoBehaviour
     private PlayerInput playerInput;  // Reference to the player input
     private StorageSystem storageSystem;  // Reference to the storage system
 
+    [Header("Sound Effects")]
+    public AudioClip catchSFX;  // Sound effect for catching an object
+    private AudioSource audioSource;  // AudioSource to play the catch sound effect
+
     private void Awake()
     {
         playerInput = GetComponent<PlayerInput>();
         storageSystem = FindObjectOfType<StorageSystem>(); // Get the storage system in the scene
+        audioSource = GetComponent<AudioSource>();  // Get the AudioSource component
+
+        // Check if the AudioSource component is attached
+        if (audioSource == null)
+        {
+            Debug.LogError("No AudioSource component found on " + gameObject.name);
+        }
     }
 
     private void OnEnable()
@@ -38,6 +49,16 @@ public class Catcher : MonoBehaviour
             if (collider.CompareTag(interactableTag))
             {
                 Debug.Log($"Caught {collider.gameObject.name}");
+
+                // Play the catch sound effect (if assigned)
+                if (catchSFX != null && audioSource != null)
+                {
+                    audioSource.PlayOneShot(catchSFX);  // Play the sound effect
+                }
+                else
+                {
+                    Debug.LogError("Catch sound effect or AudioSource is not assigned correctly.");
+                }
 
                 // Store the object in the storage system
                 storageSystem.StoreCaughtObject(collider.gameObject);

@@ -7,7 +7,7 @@ public class MusicManager : MonoBehaviour
     public AudioClip shopMusic;    // Music when the shop is open
     public AudioClip vendingMusic; // Music when the vending machine is open
 
-    private AudioSource audioSource;
+    public AudioSource audioSource;
     private AudioClip currentMusic;
 
     private bool isShopOpen = false;
