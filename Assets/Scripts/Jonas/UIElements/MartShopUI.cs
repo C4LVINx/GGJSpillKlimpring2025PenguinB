@@ -13,135 +13,131 @@ public class MartShopUI : MonoBehaviour
     [Header("Purchase Settings")]
     public int yuzuCoinCost = 1; // The cost of 1 Yuzu Coin in Stored Objects
 
+    [Header("Audio")]
+    public AudioSource audioSource; // AudioSource for sound effects
+    public AudioClip purchaseSound; // Sound for successful purchase
+    public AudioClip insufficientFundsSound; // Sound when purchase fails
+
     private StorageSystem storageSystem; // Reference to the StorageSystem
-    private PlayerInput playerInput; // Reference to the player's input
+    private PlayerInput playerInput; // Reference to PlayerInput
     private PlayerUI playerUI; // Reference to the PlayerUI script
     private PlayerShooting playerShoot; // Reference to the PlayerShooting script
-    private MusicManager musicManager; // Reference to the MusicManager script
+    private MusicManager musicManager; // Reference to the MusicManager
 
-    private bool isShopOpen = false; // Track if the shop is currently open
+    private bool isShopOpen = false; // Track if the shop is open
 
     private void Start()
     {
         storageSystem = FindObjectOfType<StorageSystem>();
         playerInput = FindObjectOfType<PlayerInput>();
-        playerUI = FindObjectOfType<PlayerUI>(); // Get the PlayerUI script
-        playerShoot = FindObjectOfType<PlayerShooting>(); // Get the PlayerShooting script
-        musicManager = FindObjectOfType<MusicManager>(); // Get the MusicManager script
+        playerUI = FindObjectOfType<PlayerUI>();
+        playerShoot = FindObjectOfType<PlayerShooting>();
+        musicManager = FindObjectOfType<MusicManager>(); // Get MusicManager reference
 
-        if (storageSystem == null || playerInput == null || playerUI == null || playerShoot == null || musicManager == null)
-        {
-            Debug.LogError("Necessary components missing!");
-            return;
-        }
+        if (storageSystem == null) Debug.LogError("StorageSystem not found!");
+        if (playerInput == null) Debug.LogError("PlayerInput component is missing!");
+        if (playerUI == null) Debug.LogError("PlayerUI script is missing!");
+        if (playerShoot == null) Debug.LogError("PlayerShooting script is missing!");
+        if (musicManager == null) Debug.LogError("MusicManager is missing! Make sure it's added to the scene.");
 
-        // Link the button to the method for purchasing Yuzu Coin
         if (purchaseYuzuCoinButton != null)
         {
             purchaseYuzuCoinButton.onClick.AddListener(PurchaseYuzuCoin);
         }
 
-        // Set up the close button
         if (closeShopButton != null)
         {
             closeShopButton.onClick.AddListener(CloseShop);
         }
 
-        shopPanel.SetActive(false); // Hide the shop initially
+        shopPanel.SetActive(false); // Ensure shop starts hidden
     }
 
     private void Update()
     {
-        storedObjectsText.text = "Insects: " + storageSystem.storedObjects.Count;
+        if (isShopOpen && Input.GetKeyDown(KeyCode.Escape))
+        {
+            CloseShop();
+        }
     }
 
-    // Open the Capymart shop
     public void OpenShop()
     {
-        if (!isShopOpen) // Only open the shop if it's not already open
+        if (isShopOpen) return;
+
+        isShopOpen = true;
+        shopPanel.SetActive(true);
+        Time.timeScale = 0f;
+
+        if (playerShoot != null) playerShoot.enabled = false;
+        if (playerUI != null) playerUI.gameObject.SetActive(false);
+        if (playerInput != null) playerInput.enabled = false;
+
+        if (musicManager != null)
         {
-            shopPanel.SetActive(true); // Show the shop
-            Time.timeScale = 0; // Pause game time
-            playerInput.enabled = false; // Disable player input
-
-            if (playerShoot != null)
-            {
-                playerShoot.enabled = false; // Disable shooting while in the shop
-            }
-
-            if (playerUI != null)
-            {
-                playerUI.gameObject.SetActive(false); // Disable Player UI when interacting with the shop
-            }
-
-            // Switch to shop music
-            if (musicManager != null)
-            {
-                musicManager.PlayMusic(musicManager.shopMusic);
-            }
-
-            isShopOpen = true; // Mark shop as open
+            musicManager.PlayShopMusic();
         }
+
+        UpdateUI();
     }
 
-    // Close the Capymart shop
     public void CloseShop()
     {
-        if (isShopOpen) // Only close the shop if it's open
+        if (!isShopOpen) return;
+
+        isShopOpen = false;
+        shopPanel.SetActive(false);
+        Time.timeScale = 1f;
+
+        if (playerShoot != null) playerShoot.enabled = true;
+        if (playerUI != null) playerUI.gameObject.SetActive(true);
+        if (playerInput != null) playerInput.enabled = true;
+
+        if (musicManager != null)
         {
-            shopPanel.SetActive(false); // Hide the shop
-            Time.timeScale = 1; // Resume game time
-            playerInput.enabled = true; // Re-enable player input
-
-            if (playerShoot != null)
-            {
-                playerShoot.enabled = true; // Re-enable shooting when exiting the shop
-            }
-
-            if (playerUI != null)
-            {
-                playerUI.gameObject.SetActive(true); // Re-enable Player UI when exiting the shop
-            }
-
-            // Switch to default music
-            if (musicManager != null)
-            {
-                musicManager.PlayMusic(musicManager.defaultMusic);
-            }
-
-            isShopOpen = false; // Mark shop as closed
+            musicManager.StopSpecialMusic();
         }
     }
 
-    // Handle the Yuzu Coin purchase
     public void PurchaseYuzuCoin()
     {
-        // Check if the player has enough stored objects to buy a Yuzu Coin
+        if (storageSystem == null) return;
+
         if (storageSystem.storedObjects.Count >= yuzuCoinCost)
         {
-            // Deduct the required stored objects
             for (int i = 0; i < yuzuCoinCost; i++)
             {
-                if (storageSystem.storedObjects.Count > 0)
-                {
-                    storageSystem.storedObjects.RemoveAt(0); // Remove one stored object
-                }
+                storageSystem.storedObjects.RemoveAt(0);
             }
 
-            // Add 1 Yuzu Coin to the player's inventory
-            storageSystem.AddYuzuCoins(1); // You can adjust this to match the cost of 1 Yuzu Coin
+            storageSystem.AddYuzuCoins(1);
+
+            // Play purchase sound effect
+            if (audioSource != null && purchaseSound != null)
+            {
+                audioSource.PlayOneShot(purchaseSound);
+            }
 
             Debug.Log("Purchased Yuzu Coin!");
-
-            // Update the PlayerUI to reflect the new Yuzu coins count
-            if (playerUI != null)
-            {
-                playerUI.ForceUpdateYuzuCoins(); // Update the UI immediately after purchase
-            }
         }
         else
         {
-            Debug.Log("Not enough stored objects to buy a Yuzu coin.");
+            if (audioSource != null && insufficientFundsSound != null)
+            {
+                audioSource.PlayOneShot(insufficientFundsSound);
+            }
+
+            Debug.Log("Not enough insects to buy a Yuzu Coin.");
+        }
+
+        UpdateUI();
+    }
+
+    private void UpdateUI()
+    {
+        if (storedObjectsText != null && storageSystem != null)
+        {
+            storedObjectsText.text = "Insects: " + storageSystem.storedObjects.Count;
         }
     }
 }
