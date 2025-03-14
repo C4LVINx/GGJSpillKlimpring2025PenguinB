@@ -2,11 +2,6 @@
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
-
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
 using System.Collections; // For using coroutines
 
 public class VendingMachine : MonoBehaviour
@@ -104,6 +99,7 @@ public class VendingMachine : MonoBehaviour
     {
         if (storageSystem.yuzuCoins >= price)
         {
+            // Successful purchase
             storageSystem.SpendYuzuCoins(price);
             Debug.Log("Item purchased successfully!");
 
@@ -124,6 +120,7 @@ public class VendingMachine : MonoBehaviour
         }
         else
         {
+            // Not enough Yuzu Coins
             Debug.Log("Not enough Yuzu Coins!");
 
             // Play the insufficient funds sound effect
@@ -132,8 +129,7 @@ public class VendingMachine : MonoBehaviour
                 audioSource.PlayOneShot(notEnoughFundsSFX);
             }
 
-            // Wait for the insufficient funds sound to finish, then load the next scene
-            StartCoroutine(WaitForSFXAndLoadNextScene(notEnoughFundsSFX.length));  // Wait for the duration of the SFX
+            // Do not load the next scene in this case, simply return from the method
         }
     }
 
